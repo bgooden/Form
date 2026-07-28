@@ -5,6 +5,7 @@ from streamlit_gsheets import GSheetsConnection
 GSHEET_URL = "https://docs.google.com/spreadsheets/d/1OXYM4dz36wonTqNQkyWSiU6HNGqJHh_j9-p0wJZBJ-Q/edit?usp=sharing"
 
 st.title("ΔΓΙ Interest Form")
+conn = st.experimental_connection("gsheets", type=GSheetsConnection)
 left_co, cent_co, right_co = st.columns([1, 2, 1])
 with cent_co:
     st.image("dgi crest.jpg",caption="Diligence! Brotherhood! Integrity!", width = 300)
@@ -37,19 +38,14 @@ if submitted:
     elif not why:
         st.error("You can't leave why you are interesting in rush empty")
     else:
-        conn = st.connection("gsheets", type=GSheetsConnection)
-
-    with st.spinner("Submitting your application..."):
-
-        try:
-            existing_data = conn.read(spreadsheet=GSHEET_URL)
-
-            if existing_data is None:
+        with st.spinner("Submitting your application..."):
+            try:
+                existing_data = conn.read(spreadsheet=GSHEET_URL)
+                if existing_data is None or existing_data.empty:
+                    existing_data = pd.DataFrame()
+            except Exception as e:
+                st.error(e)
                 existing_data = pd.DataFrame()
-
-        except Exception as e:
-            st.error(e)
-            existing_data = pd.DataFrame()
 
         new_applications = {
             "Timestamp": pd.Timestamp.now().strftime("%Y-%m-%d %H:%M:%S"),
@@ -61,7 +57,14 @@ if submitted:
             "Instagram": social2 if social2 else "N/A",
             "Reason for Rushing": why,
         }
-        updated_df = pd.concat([existing_data, pd.DataFrame([new_applications])], ignore_index=True)
-        conn.update(spreadsheet=GSHEET_URL, data=updated_df)
 
-        st.success(f"Success! Thank you for your time {full_name}!")
+        try:
+
+            new_row = pd.DataFrame([new_applications])
+            updated_df = pd.concat([existing_data, new_row], ignore_index=True)
+
+            conn.update(spreadsheet=GSHEET_URL, data=updated_df)
+            st.success(f"Success! Thank you for your time {full_name}!")
+
+        except Exception as e:
+            st.error(f"Error saving data: {e}")
