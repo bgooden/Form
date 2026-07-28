@@ -5,7 +5,7 @@ from streamlit_gsheets import GSheetsConnection
 GSHEET_URL = "https://docs.google.com/spreadsheets/d/1OXYM4dz36wonTqNQkyWSiU6HNGqJHh_j9-p0wJZBJ-Q/edit?usp=sharing"
 
 st.title("ΔΓΙ Interest Form")
-conn = st.experimental_connection("gsheets", type=GSheetsConnection)
+conn = st.connection("gsheets", type=GSheetsConnection)
 left_co, cent_co, right_co = st.columns([1, 2, 1])
 with cent_co:
     st.image("dgi crest.jpg",caption="Diligence! Brotherhood! Integrity!", width = 300)
